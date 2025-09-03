@@ -35,6 +35,16 @@
         "videos",
         "audios"
       ]
+    },
+    "renders": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
     }
   }
 }
