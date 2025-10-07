@@ -566,6 +566,10 @@ export interface ApiProjectProject extends Struct.CollectionTypeSchema {
       'images' | 'files' | 'videos' | 'audios',
       true
     >;
+    renders2: Schema.Attribute.Media<
+      'images' | 'files' | 'videos' | 'audios',
+      true
+    >;
     thumbs: Schema.Attribute.Media<
       'images' | 'files' | 'videos' | 'audios',
       true
