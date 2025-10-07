@@ -36,17 +36,10 @@
         "audios"
       ]
     },
-    "renders": {
-      "type": "media",
-      "multiple": true,
-      "allowedTypes": [
-        "images",
-        "files",
-        "videos",
-        "audios"
-      ]
+    "aaaa": {
+      "type": "string"
     },
-    "renders2": {
+    "rend": {
       "type": "media",
       "multiple": true,
       "allowedTypes": [
