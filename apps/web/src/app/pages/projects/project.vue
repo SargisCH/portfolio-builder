@@ -66,14 +66,24 @@
                                 ]"
                             />
                             <div class="col-12 row">
-                                <q-img
-                                    class="q-ml-md"
-                                    v-for="(img, index) in thumbsUploaded"
-                                    :key="index"
-                                    :src="img"
-                                    spinner-color="white"
-                                    style="height: 140px; max-width: 150px"
-                                />
+                                <div
+                                    class="q-ml-md relative-position image-item"
+                                    v-for="(imageObject, index) in thumbsUploaded"
+                                    :key="imageObject.originalIndex"
+                                    draggable="true"
+                                    @drag="console.log('draggg')"
+                                    @dragover="handleDragOver(index, $event)"
+                                    :data-dropIndex="index"
+                                >
+                                    <ImageActionsOverlay
+                                        @delete="onDelete(imageObject.originalIndex, index)"
+                                    />
+                                    <q-img
+                                        :src="imageObject.image"
+                                        spinner-color="white"
+                                        style="height: 240px; width: 250px"
+                                    />
+                                </div>
                             </div>
                         </q-card-section>
 
@@ -100,12 +110,25 @@
         </div>
     </AppPage>
 </template>
+<style lang="scss" scoped>
+.image-item {
+    > .overlay {
+        visibility: hidden;
+    }
+    &:hover {
+        > .overlay {
+            visibility: visible;
+        }
+    }
+}
+</style>
 
 <script setup lang="ts">
 import { api, usePromiseState, ResponseError, parseImages } from '@/common';
 import { ProjectResponse, ProjectCreateDto, projectCreateSchema } from '@workspace/shared';
 import { useI18n } from 'vue-i18n';
 import { useQuasar, QFile } from 'quasar';
+import ImageActionsOverlay from '@/app/components/features/project/ImageActionsOverlay.vue';
 
 const $q = useQuasar();
 const { t } = useI18n();
@@ -151,15 +174,27 @@ const saveError = computed<string>(() => {
     return undefined;
 });
 
+const handleDragOver = (dragIndex, event) => {
+    console.log(event, dragIndex);
+};
+
+const onDelete = (indexToDelete, renderedIndex) => {
+    const items = Array.from(thumbs.value);
+    items.splice(indexToDelete);
+    thumbs.value = items;
+    thumbsUploaded.value.splice(renderedIndex, 1);
+};
+
 watch(form, () => {
     saveAction.error = undefined;
 });
 watch(thumbs, () => {
-    console.log('thumbs', thumbs.value);
+    console.log('thumbs', thumbs.value.length, thumbsUploaded.value.length);
+    if (thumbs.value.length < thumbsUploaded.value.length) return;
     const imagesAdded = thumbs.value.slice(
         thumbsUploaded.value.length ? thumbsUploaded.value.length - 1 : 0
     );
-    parseImages(imagesAdded).then((imagesParsed: string[]) => {
+    parseImages(imagesAdded).then((imagesParsed: { originalIndex: number; image: string }[]) => {
         thumbsUploaded.value = imagesParsed;
     });
 });
