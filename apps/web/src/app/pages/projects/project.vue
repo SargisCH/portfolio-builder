@@ -49,42 +49,14 @@
                                 outlined
                             >
                             </VInput>
-
-                            <q-file
-                                v-model="thumbs"
-                                label="Pick files"
-                                outlined
-                                use-chips
-                                multiple
-                                append
-                                chips
-                                style="max-width: 300px"
-                                :rules="[
-                                    (val) =>
-                                        (val && ['image/jpeg', 'image/png'].includes(val.type)) ||
-                                        'Only JPEG and PNG images are allowed',
-                                ]"
+                            <ImageUploadList
+                                placeholder="Upload thumbs"
+                                @update:modelValue="handleThumbsUpdate"
                             />
-                            <div class="col-12 row">
-                                <div
-                                    class="q-ml-md relative-position image-item"
-                                    v-for="(imageObject, index) in thumbsUploaded"
-                                    :key="imageObject.originalIndex"
-                                    draggable="true"
-                                    @drag="console.log('draggg')"
-                                    @dragover="handleDragOver(index, $event)"
-                                    :data-dropIndex="index"
-                                >
-                                    <ImageActionsOverlay
-                                        @delete="onDelete(imageObject.originalIndex, index)"
-                                    />
-                                    <q-img
-                                        :src="imageObject.image"
-                                        spinner-color="white"
-                                        style="height: 240px; width: 250px"
-                                    />
-                                </div>
-                            </div>
+                            <ImageUploadList
+                                placeholder="Upload renders"
+                                @update:modelValue="handlerRendersUpdate"
+                            />
                         </q-card-section>
 
                         <q-card-section class="text-center text-negative" v-if="saveError">
@@ -124,16 +96,26 @@
 </style>
 
 <script setup lang="ts">
-import { api, usePromiseState, ResponseError, parseImages } from '@/common';
+import { api, usePromiseState, ResponseError } from '@/common';
 import { ProjectResponse, ProjectCreateDto, projectCreateSchema } from '@workspace/shared';
 import { useI18n } from 'vue-i18n';
-import { useQuasar, QFile } from 'quasar';
-import ImageActionsOverlay from '@/app/components/features/project/ImageActionsOverlay.vue';
+import { useQuasar } from 'quasar';
+import ImageUploadList from '@/app/components/features/project/ImageUploadList.vue';
 
 const $q = useQuasar();
 const { t } = useI18n();
 const route = useRoute();
 const isNew = route.params.id === 'new';
+
+const thumbs = ref<FileList>();
+const renders = ref<FileList>();
+
+function handleThumbsUpdate(images: FileList) {
+    thumbs.value = images;
+}
+function handlerRendersUpdate(images: FileList) {
+    renders.value = images;
+}
 
 const form = reactive<ProjectCreateDto>({
     title: '',
@@ -145,9 +127,6 @@ const form = reactive<ProjectCreateDto>({
     tools: '',
 });
 
-const thumbs = ref([]);
-const thumbsUploaded = ref([]);
-
 function loadForm(data: ProjectResponse) {
     form.title = data.title;
     form.description = data.description;
@@ -157,11 +136,9 @@ function loadForm(data: ProjectResponse) {
     form.tools = data.tools;
     form.date = data.date;
 }
-
 const saveAction = usePromiseState<void, ResponseError>(async () => {
     // const { data } = await api.users.updateOne(userAction.state.id, form);
     // loadForm(data);
-    console.log('thumbs', thumbs.value[0]);
 });
 
 const projectAction = usePromiseState<void, ResponseError>(async () => {
@@ -174,28 +151,7 @@ const saveError = computed<string>(() => {
     return undefined;
 });
 
-const handleDragOver = (dragIndex, event) => {
-    console.log(event, dragIndex);
-};
-
-const onDelete = (indexToDelete, renderedIndex) => {
-    const items = Array.from(thumbs.value);
-    items.splice(indexToDelete);
-    thumbs.value = items;
-    thumbsUploaded.value.splice(renderedIndex, 1);
-};
-
 watch(form, () => {
     saveAction.error = undefined;
-});
-watch(thumbs, () => {
-    console.log('thumbs', thumbs.value.length, thumbsUploaded.value.length);
-    if (thumbs.value.length < thumbsUploaded.value.length) return;
-    const imagesAdded = thumbs.value.slice(
-        thumbsUploaded.value.length ? thumbsUploaded.value.length - 1 : 0
-    );
-    parseImages(imagesAdded).then((imagesParsed: { originalIndex: number; image: string }[]) => {
-        thumbsUploaded.value = imagesParsed;
-    });
 });
 </script>

@@ -3,7 +3,6 @@
         <div class="row justify-end full-width">
             <q-btn icon="mdi-close" color="negative" @click="handleDelete" />
         </div>
-        <div class="move-text">Drag to move items</div>
     </div>
 </template>
 
