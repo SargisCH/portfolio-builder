@@ -34,6 +34,13 @@ const configSchema = object().shape({
     seed: object({
         rootPassword: string().optional(),
     }),
+    cloud: object({
+        accessToken: string().required(),
+        secretAccessKey: string().required(),
+        storageEndpoint: string().required(),
+        bucketName: string().required(),
+        bucketPublicUrl: string().required(),
+    }),
 });
 
 export const config = () => {
@@ -64,6 +71,13 @@ export const config = () => {
             },
             seed: {
                 rootPassword: process.env.ROOT_PASSWORD ?? '123456',
+            },
+            cloud: {
+                accessToken: process.env.CLOUD_ACCESS_TOKEN,
+                secretAccessKey: process.env.CLOUD_SECRET_ACCESS_KEY,
+                storageEndpoint: process.env.STORAGE_ENDPOINT,
+                bucketName: process.env.BUCKET_NAME,
+                bucketPublicUrl: process.env.BUCKET_PUBLIC_URL,
             },
         };
 

@@ -9,7 +9,7 @@ export const projectCreateSchema: ObjectSchema<ProjectCreateDto> = object().shap
     tools: string().optional(),
     date: string().required(),
     location: string().optional(),
-    images: array(string()),
+    renders: array(string()),
     thumbs: array(string()),
 });
 
@@ -20,6 +20,6 @@ export class ProjectCreateDto {
     tools?: string;
     date: string;
     location?: string;
-    images: string[];
+    renders: string[];
     thumbs: string[];
 }

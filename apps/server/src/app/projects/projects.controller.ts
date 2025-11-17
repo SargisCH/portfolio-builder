@@ -1,12 +1,27 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Get,
+    Param,
+    ParseUUIDPipe,
+    Post,
+    Put,
+    UploadedFiles,
+    UseInterceptors,
+} from '@nestjs/common';
 import { ProjectService } from './projects.service';
 import { AuthUser } from '../auth/decorators/auth-user.decorator';
 import { User } from '../db/user.entity';
 import { ProjectCreateDto, ProjectResponse } from '../../../../../libs/shared/src/projects';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { StorageService } from '../storage/storage.service';
 
 @Controller('/projects')
 export class ProjectsController {
-    constructor(private readonly projectsService: ProjectService) {}
+    constructor(
+        private readonly projectsService: ProjectService,
+        private readonly storageService: StorageService
+    ) {}
 
     @Get('/')
     async getMany(): Promise<ProjectResponse[]> {
@@ -26,7 +41,30 @@ export class ProjectsController {
     }
 
     @Post('/')
-    async createOne(@Body() project: ProjectCreateDto): Promise<ProjectResponse> {
-        return await this.projectsService.createOne(project);
+    @UseInterceptors(FileFieldsInterceptor([{ name: 'thumbs' }, { name: 'renders' }]))
+    async createOne(
+        @UploadedFiles() files: { thumbs: Express.Multer.File[]; renders: Express.Multer.File[] },
+        @Body() project: ProjectCreateDto
+    ): Promise<ProjectResponse> {
+        const uploadedThumbUrls = await this.storageService.uploadMultiple(
+            files.thumbs.map((thumb) => ({
+                key: thumb.filename,
+                body: thumb.buffer,
+                contentType: 'application/json',
+            }))
+        );
+        const uploadedRendersUrl = await this.storageService.uploadMultiple(
+            files.renders.map((render) => ({
+                key: render.filename,
+                body: render.buffer,
+                contentType: 'application/json',
+            }))
+        );
+        const projectToCreate = {
+            ...project,
+            thumbs: uploadedThumbUrls,
+            renders: uploadedRendersUrl,
+        };
+        return await this.projectsService.createOne(projectToCreate);
     }
 }
