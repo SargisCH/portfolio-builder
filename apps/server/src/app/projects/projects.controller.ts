@@ -48,14 +48,14 @@ export class ProjectsController {
     ): Promise<ProjectResponse> {
         const uploadedThumbUrls = await this.storageService.uploadMultiple(
             files.thumbs.map((thumb) => ({
-                key: thumb.filename,
+                key: thumb.originalname,
                 body: thumb.buffer,
                 contentType: 'application/json',
             }))
         );
         const uploadedRendersUrl = await this.storageService.uploadMultiple(
             files.renders.map((render) => ({
-                key: render.filename,
+                key: render.originalname,
                 body: render.buffer,
                 contentType: 'application/json',
             }))
@@ -65,6 +65,6 @@ export class ProjectsController {
             thumbs: uploadedThumbUrls,
             renders: uploadedRendersUrl,
         };
-        return await this.projectsService.createOne(projectToCreate);
+        return await this.projectsService.createOne({ ...projectToCreate });
     }
 }

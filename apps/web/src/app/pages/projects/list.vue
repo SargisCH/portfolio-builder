@@ -1,5 +1,5 @@
 <template>
-    <AppPage :loading="usersAction.counter === 0">
+    <AppPage :loading="projectsAction.counter === 0">
         <template v-slot:header>
             <AppPageHeader :title="$t('routes_users')" icon="mdi-account-supervisor" />
         </template>
@@ -25,7 +25,7 @@
                         <q-btn
                             icon="mdi-plus"
                             :label="$t('add')"
-                            :disable="usersAction.isLoading"
+                            :disable="projectsAction.isLoading"
                             color="primary"
                             rounded
                             :to="{ name: 'project', params: { id: 'new' } }"
@@ -38,35 +38,23 @@
                 <q-table
                     class="no-shadow"
                     row-key="id"
-                    :rows="usersAction.state.elements"
+                    :rows="projectsAction.state"
                     :columns="columns"
-                    :loading="!usersAction.isReady"
-                    @request="(props) => usersAction.execute(500, props.pagination)"
+                    :loading="!projectsAction.isReady"
+                    @request="(props) => projectsAction.execute(500, props.pagination)"
                     :filter="filter"
                     color="primary"
                     v-model:pagination="pagination"
                     :rows-per-page-options="[5, 10, 20, 50]"
                 >
-                    <template v-slot:body-cell-avatar="props">
-                        <q-td>
-                            <q-avatar size="40px">
-                                <q-img
-                                    :src="props.value"
-                                    :alt="`${props.row.firstName} ${props.row.lastName}`"
-                                />
-                            </q-avatar>
-                        </q-td>
-                    </template>
-
                     <template v-slot:body-cell-edit="props">
-                        <q-td class="text-right">
+                        <q-td class="text-left">
                             <q-btn
-                                v-if="props.value !== accountStore.state.id"
                                 size="10px"
                                 round
                                 color="secondary"
                                 icon="mdi-cog"
-                                :to="{ name: 'user', params: { id: props.value } }"
+                                :to="{ name: 'project', params: { id: props.value } }"
                             />
                         </q-td>
                     </template>
@@ -78,9 +66,8 @@
 
 <script setup lang="ts">
 import { api, usePromiseState, ResponseError } from '@/common';
-import { PaginationResponse, UserProfileResponse } from '@workspace/shared';
+import { ProjectResponse } from '@workspace/shared';
 import { QTableColumn, QTableProps, useQuasar } from 'quasar';
-import UserCreateDialog from '@/app/components/dialogs/UserCreateDialog.vue';
 import { useI18n } from 'vue-i18n';
 import { useAccountStore } from '@/stores/account';
 
@@ -98,82 +85,44 @@ const pagination = ref<QTableProps['pagination']>({
 
 const filter = ref('');
 
-const columns: QTableColumn<UserProfileResponse>[] = [
+const columns: QTableColumn<ProjectResponse>[] = [
     {
-        name: 'avatar',
-        label: null,
-        field: 'avatar',
-        align: 'center',
+        name: 'title',
+        label: 'title',
+        field: 'title',
+        align: 'left',
     },
     {
-        name: 'name',
-        label: t('users_list_first_and_last_name'),
-        field: (row) => `${row.firstName} ${row.lastName}`,
+        name: 'description',
+        label: 'description',
+        field: 'description',
         align: 'left',
         sortable: true,
     },
     {
-        name: 'email',
-        label: t('users_list_email'),
-        field: 'email',
+        name: 'location',
+        label: 'location',
+        field: 'location',
         align: 'left',
     },
     {
-        name: 'role',
-        label: t('users_list_role'),
-        field: (row) => t(`roles_${row.role}`),
+        name: 'tools',
+        label: 'tools',
+        field: 'tools',
         align: 'left',
-        sortable: true,
-    },
-    {
-        name: 'createdAt',
-        label: t('users_list_created_at'),
-        field: (row) =>
-            new Date(row.createdAt).toLocaleDateString([], {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-            }),
-        align: 'left',
-        sortable: true,
     },
     {
         name: 'edit',
-        label: t('edit'),
+        label: 'edit',
         field: 'id',
-        align: 'right',
+        align: 'left',
     },
 ];
 
-const usersAction = usePromiseState<PaginationResponse<UserProfileResponse>, ResponseError>(
-    async (paginationPayload: QTableProps['pagination']) => {
-        const { page, rowsPerPage, sortBy, descending } = paginationPayload;
+const projectsAction = usePromiseState<ProjectResponse[], ResponseError>(async () => {
+    const res = await api.projects.getProjects();
+    return res.data;
+});
 
-        const res = await api.users.getMany({
-            page: page,
-            take: rowsPerPage,
-            sortBy: sortBy,
-            descending: descending,
-            filter: filter.value,
-        });
-
-        pagination.value.page = page;
-        pagination.value.rowsPerPage = rowsPerPage;
-        pagination.value.rowsNumber = res.data.total;
-        pagination.value.sortBy = sortBy;
-        pagination.value.descending = descending;
-
-        return res.data;
-    }
-);
-
-usersAction.execute(500, pagination.value);
-
-function userCreateDialog(): void {
-    $q.dialog({
-        component: UserCreateDialog,
-    }).onOk(() => {
-        usersAction.execute(500, pagination.value);
-    });
-}
+projectsAction.execute(500, pagination.value);
 </script>

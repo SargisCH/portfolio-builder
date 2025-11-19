@@ -50,10 +50,12 @@
                             >
                             </VInput>
                             <ImageUploadList
+                                :modelValue="thumbsModelValue"
                                 placeholder="Upload thumbs"
                                 @update:modelValue="handleThumbsUpdate"
                             />
                             <ImageUploadList
+                                :modelValue="rendersModelValue"
                                 placeholder="Upload renders"
                                 @update:modelValue="handlerRendersUpdate"
                             />
@@ -107,22 +109,24 @@ const { t } = useI18n();
 const route = useRoute();
 const isNew = route.params.id === 'new';
 
-const thumbs = ref<FileList>();
-const renders = ref<FileList>();
+const thumbs = ref<File[]>();
+const renders = ref<File[]>();
+const thumbsModelValue = ref<string[]>();
+const rendersModelValue = ref<string[]>();
 
-function handleThumbsUpdate(images: FileList) {
+function handleThumbsUpdate(images: File[]) {
     thumbs.value = images;
 }
-function handlerRendersUpdate(images: FileList) {
+function handlerRendersUpdate(images: File[]) {
     renders.value = images;
 }
 
-const form = reactive<ProjectCreateDto>({
+const form = reactive<ProjectResponse>({
     title: '',
     description: '',
     location: '',
     date: null,
-    images: [],
+    renders: [],
     thumbs: [],
     tools: '',
 });
@@ -131,20 +135,32 @@ function loadForm(data: ProjectResponse) {
     form.title = data.title;
     form.description = data.description;
     form.location = data.location;
-    form.images = data.images;
+    form.renders = data.renders;
     form.thumbs = data.thumbs;
     form.tools = data.tools;
     form.date = data.date;
 }
 const saveAction = usePromiseState<void, ResponseError>(async () => {
-    // const { data } = await api.users.updateOne(userAction.state.id, form);
+    if (isNew) {
+        const { data } = await api.projects.createOne({
+            ...form,
+            thumbs: thumbs.value,
+            renders: renders.value,
+        });
+        console.log('data', data);
+    }
     // loadForm(data);
 });
 
-const projectAction = usePromiseState<void, ResponseError>(async () => {
-    // const { data } = await api.users.updateOne(userAction.state.id, form);
-    // loadForm(data);
+const projectAction = usePromiseState<ProjectResponse | void, ResponseError>(async () => {
+    if (isNew) return;
+    const { data } = await api.projects.getProject(route.params.id as string);
+    loadForm(data);
+    thumbsModelValue.value = data.thumbs;
+    rendersModelValue.value = data.renders;
 });
+
+projectAction.execute();
 const saveError = computed<string>(() => {
     if (saveAction.error) return t('project_form_errors_default');
 

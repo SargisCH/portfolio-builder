@@ -19,10 +19,10 @@ export class Project extends BaseEntity {
     @Column({ nullable: true })
     location: string;
 
-    @Column({ nullable: true, array: true })
-    images: string[];
+    @Column('text', { array: true })
+    renders: string[];
 
-    @Column({ nullable: true })
+    @Column('text', { array: true })
     thumbs: string[];
 
     @Column({

@@ -13,11 +13,14 @@
         ]"
     />
     <div class="col-12 row">
-        <div v-for="(imageObject, index) in imagesRendered" :key="imageObject.originalIndex">
+        <div
+            v-for="(imageObject, index) in imagesRendered"
+            :key="imageObject.originalIndex || imageObject"
+        >
             <div class="q-ml-md relative-position image-item">
-                <ImageActionsOverlay @delete="onDelete(imageObject.originalIndex, index)" />
+                <ImageActionsOverlay @delete="onDelete(imageObject.originalIndex || -1, index)" />
                 <q-img
-                    :src="imageObject.image"
+                    :src="imageObject.image || imageObject"
                     spinner-color="white"
                     style="height: 240px; width: 250px"
                 />
@@ -71,12 +74,12 @@ import { parseImages } from '@/common';
 import { QFile } from 'quasar';
 import ImageActionsOverlay from '@/app/components/features/project/ImageActionsOverlay.vue';
 
-const props = defineProps(['placeholder']);
+const props = defineProps(['placeholder', 'modelValue']);
 
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue', 'delete:savedImage']);
 
-const images = ref([]);
-const imagesRendered = ref([]);
+const images = ref<File[]>([]);
+const imagesRendered = ref(props.modelValue || []);
 const swapIndex = ref({
     index: -1,
     originalIndex: -1,
@@ -101,9 +104,14 @@ const paste = (indexes: { index: number; originalIndex: number }) => {
     emit('update:modelValue', images.value);
 };
 const onDelete = (indexToDelete: number, renderedIndex: number) => {
-    const items = Array.from(images.value);
-    items.splice(indexToDelete);
-    images.value = items;
+    if (indexToDelete > -1) {
+        const items = Array.from(images.value);
+        items.splice(indexToDelete);
+        images.value = items;
+    }
+    if (indexToDelete === -1) {
+        emit('delete:savedImage', imagesRendered[renderedIndex]);
+    }
     imagesRendered.value.splice(renderedIndex, 1);
     emit('update:modelValue', images.value);
 };

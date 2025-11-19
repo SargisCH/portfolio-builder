@@ -3,6 +3,7 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client
 import { ConfigService } from '@nestjs/config';
 
 const getS3Client = (endpoint: string, accessToken: string, secretAccessKey: string) => {
+    console.log('cred', endpoint, accessToken, secretAccessKey);
     return new S3Client({
         region: 'auto',
         endpoint: endpoint,
@@ -30,7 +31,7 @@ export class StorageService {
             ContentType: contentType,
         });
         await s3Client.send(command);
-        return this.configService.get('cloud.bucketPuclicUrl') + `/${key}`;
+        return this.configService.get('cloud.bucketPublicUrl') + `/${key}`;
     }
     async uploadMultiple(files: { key: string; body: Buffer; contentType: string }[]) {
         return Promise.all(

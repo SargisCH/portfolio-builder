@@ -1,7 +1,13 @@
-import { array, date, object, ObjectSchema, setLocale, string } from 'yup';
+import { array, date, mixed, object, ObjectSchema, setLocale, string } from 'yup';
 import { UseSchema, yupLocale } from '@workspace/shared';
 
 setLocale(yupLocale);
+
+const validFileExtensions = { image: ['jpg', 'gif', 'png', 'jpeg', 'svg', 'webp'] };
+
+function isValidFileType(fileName: string, fileType: string) {
+    return fileName && validFileExtensions[fileType].indexOf(fileName.split('.').pop()) > -1;
+}
 
 export const projectCreateSchema: ObjectSchema<ProjectCreateDto> = object().shape({
     title: string().required(),
@@ -9,8 +15,18 @@ export const projectCreateSchema: ObjectSchema<ProjectCreateDto> = object().shap
     tools: string().optional(),
     date: string().required(),
     location: string().optional(),
-    renders: array(string()),
-    thumbs: array(string()),
+    renders: array().optional(),
+    // mixed<File>()
+    //     .required('Required')
+    //     .test('is-valid-type', 'Not a valid image type', (value) =>
+    //         isValidFileType(value && value.name.toLowerCase(), 'image')
+    //     )
+    thumbs: array().optional(),
+    // mixed<File>()
+    //     .required('Required')
+    //     .test('is-valid-type', 'Not a valid image type', (value) =>
+    //         isValidFileType(value && value.name.toLowerCase(), 'image')
+    //     )
 });
 
 @UseSchema(projectCreateSchema)
@@ -20,6 +36,11 @@ export class ProjectCreateDto {
     tools?: string;
     date: string;
     location?: string;
-    renders: string[];
-    thumbs: string[];
+    renders: File[];
+    thumbs: File[];
 }
+
+export type ProjectCreateType = Omit<ProjectCreateDto, 'renders' | 'thumbs'> & {
+    thumbs: File[];
+    renders: File[];
+};
