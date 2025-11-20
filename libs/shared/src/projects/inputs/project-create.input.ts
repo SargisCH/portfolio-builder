@@ -16,17 +16,16 @@ export const projectCreateSchema: ObjectSchema<ProjectCreateDto> = object().shap
     date: string().required(),
     location: string().optional(),
     renders: array().optional(),
-    // mixed<File>()
-    //     .required('Required')
-    //     .test('is-valid-type', 'Not a valid image type', (value) =>
-    //         isValidFileType(value && value.name.toLowerCase(), 'image')
-    //     )
     thumbs: array().optional(),
-    // mixed<File>()
-    //     .required('Required')
-    //     .test('is-valid-type', 'Not a valid image type', (value) =>
-    //         isValidFileType(value && value.name.toLowerCase(), 'image')
-    //     )
+});
+export const projectUpdateSchema: ObjectSchema<ProjectUpdateDto> = object().shape({
+    title: string().optional(),
+    description: string().optional(),
+    tools: string().optional(),
+    date: string().optional(),
+    location: string().optional(),
+    renders: array().optional(),
+    thumbs: array().optional(),
 });
 
 @UseSchema(projectCreateSchema)
@@ -43,4 +42,13 @@ export class ProjectCreateDto {
 export type ProjectCreateType = Omit<ProjectCreateDto, 'renders' | 'thumbs'> & {
     thumbs: File[];
     renders: File[];
+};
+export type ProjectUpdateDto = {
+    thumbs?: File[];
+    renders?: File[];
+    title?: string;
+    description?: string;
+    tools?: string;
+    date?: string;
+    location?: string;
 };

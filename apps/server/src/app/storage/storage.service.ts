@@ -3,7 +3,6 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client
 import { ConfigService } from '@nestjs/config';
 
 const getS3Client = (endpoint: string, accessToken: string, secretAccessKey: string) => {
-    console.log('cred', endpoint, accessToken, secretAccessKey);
     return new S3Client({
         region: 'auto',
         endpoint: endpoint,

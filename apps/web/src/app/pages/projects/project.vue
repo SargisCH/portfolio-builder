@@ -9,7 +9,7 @@
                 <AppCard
                     :title="$t('project')"
                     @submit="saveAction.execute(500)"
-                    :validation-schema="projectCreateSchema"
+                    :validation-schema="isNew ? projectCreateSchema : projectUpdateSchema"
                     :initial-values="form"
                     is-form
                 >
@@ -53,11 +53,13 @@
                                 :modelValue="thumbsModelValue"
                                 placeholder="Upload thumbs"
                                 @update:modelValue="handleThumbsUpdate"
+                                :preloadedImages="preloadedThumbs"
                             />
                             <ImageUploadList
                                 :modelValue="rendersModelValue"
                                 placeholder="Upload renders"
                                 @update:modelValue="handlerRendersUpdate"
+                                :preloadedImages="preloadedRenders"
                             />
                         </q-card-section>
 
@@ -98,8 +100,13 @@
 </style>
 
 <script setup lang="ts">
-import { api, usePromiseState, ResponseError } from '@/common';
-import { ProjectResponse, ProjectCreateDto, projectCreateSchema } from '@workspace/shared';
+import { api, usePromiseState, ResponseError, convertImageSrcsToFile } from '@/common';
+import {
+    ProjectResponse,
+    ProjectCreateDto,
+    projectCreateSchema,
+    projectUpdateSchema,
+} from '@workspace/shared';
 import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
 import ImageUploadList from '@/app/components/features/project/ImageUploadList.vue';
@@ -107,10 +114,16 @@ import ImageUploadList from '@/app/components/features/project/ImageUploadList.v
 const $q = useQuasar();
 const { t } = useI18n();
 const route = useRoute();
+const router = useRouter();
 const isNew = route.params.id === 'new';
 
 const thumbs = ref<File[]>();
 const renders = ref<File[]>();
+
+const preloadedThumbs = ref<File[]>();
+const preloadedRenders = ref<File[]>();
+const deletedThumbs: string[] = [];
+const deletedRenders: string[] = [];
 const thumbsModelValue = ref<string[]>();
 const rendersModelValue = ref<string[]>();
 
@@ -141,23 +154,36 @@ function loadForm(data: ProjectResponse) {
     form.date = data.date;
 }
 const saveAction = usePromiseState<void, ResponseError>(async () => {
+    const submitData = {
+        ...form,
+        thumbs: thumbs.value,
+        renders: renders.value,
+    };
     if (isNew) {
-        const { data } = await api.projects.createOne({
-            ...form,
-            thumbs: thumbs.value,
-            renders: renders.value,
-        });
-        console.log('data', data);
+        await api.projects.createOne(submitData);
+    } else {
+        await api.projects.updateProject(route.params.id as string, submitData);
     }
-    // loadForm(data);
+    $q.notify({
+        icon: 'mdi-check',
+        color: 'positive',
+        message: t('saved_successfully'),
+        timeout: 1000,
+    });
+    router.push({ name: 'projects' });
 });
 
 const projectAction = usePromiseState<ProjectResponse | void, ResponseError>(async () => {
     if (isNew) return;
-    const { data } = await api.projects.getProject(route.params.id as string);
-    loadForm(data);
-    thumbsModelValue.value = data.thumbs;
-    rendersModelValue.value = data.renders;
+    try {
+        const { data } = await api.projects.getProject(route.params.id as string);
+        preloadedThumbs.value = await convertImageSrcsToFile(data.thumbs);
+        preloadedRenders.value = await convertImageSrcsToFile(data.renders);
+
+        loadForm(data);
+    } catch (e) {
+        console.log('eee', e);
+    }
 });
 
 projectAction.execute();

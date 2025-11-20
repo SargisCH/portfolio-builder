@@ -74,11 +74,10 @@ import { parseImages } from '@/common';
 import { QFile } from 'quasar';
 import ImageActionsOverlay from '@/app/components/features/project/ImageActionsOverlay.vue';
 
-const props = defineProps(['placeholder', 'modelValue']);
-
+const props = defineProps(['placeholder', 'modelValue', 'preloadedImages']);
 const emit = defineEmits(['update:modelValue', 'delete:savedImage']);
 
-const images = ref<File[]>([]);
+const images = ref<File[]>(props.preloadedImages || []);
 const imagesRendered = ref(props.modelValue || []);
 const swapIndex = ref({
     index: -1,
@@ -125,5 +124,13 @@ watch(images, () => {
     parseImages(imagesAdded).then((imagesParsed: { originalIndex: number; image: string }[]) => {
         imagesRendered.value = imagesParsed;
     });
+});
+onMounted(() => {
+    emit('update:modelValue', images.value);
+    parseImages(props.preloadedImages).then(
+        (imagesParsed: { originalIndex: number; image: string }[]) => {
+            imagesRendered.value = imagesParsed;
+        }
+    );
 });
 </script>

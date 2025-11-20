@@ -15,3 +15,17 @@ export const parseImages = async (
         });
     });
 };
+
+export const convertImageSrcsToFile = async (images: string[]) => {
+    const promises = [];
+    images.forEach((imageSrc) => {
+        promises.push(fetch(imageSrc).then((res) => res.blob()));
+    });
+    const imagesBlobs = await Promise.all(promises);
+    return imagesBlobs.map((imageFile, index) => {
+        const name = images[index].split('/').pop();
+        return new File([imageFile], name, {
+            type: `image/${name.split('.').pop()}`,
+        });
+    });
+};

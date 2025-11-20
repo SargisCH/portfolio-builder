@@ -14,17 +14,6 @@ const entities: unknown[] = [User, Session, Project];
             inject: [ConfigService],
 
             useFactory: async (configService: ConfigService) => {
-                console.log({
-                    type: configService.get<string>('db.type'),
-                    host: configService.get<string>('db.host'),
-                    port: configService.get<number>('db.port'),
-                    database: configService.get<string>('db.name'),
-                    username: configService.get<string>('db.user'),
-                    password: configService.get<string>('db.password'),
-                    synchronize: configService.get<boolean>('db.synchronize'),
-                    bigNumberStrings: false,
-                    entities: entities,
-                });
                 return {
                     type: configService.get<string>('db.type'),
                     host: configService.get<string>('db.host'),

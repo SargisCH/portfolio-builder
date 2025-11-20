@@ -9,6 +9,7 @@
         "server:dev": "nx serve server",
         "server:seed": "node dist/apps/server/cli.js seed",
         "build": "npm run clean && nx run-many --target=lint,test,build --configuration=production --projects=web,server",
+        "build:web": "npm run clean && nx run-many --target=lint,test,build --configuration=production --projects=web",
         "test": "nx run-many --target=test --verbose",
         "clean": "rimraf dist",
         "lint": "nx run-many --target=lint",

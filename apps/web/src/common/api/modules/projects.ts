@@ -1,8 +1,8 @@
-import { ProjectResponse, ProjectCreateType } from '@workspace/shared';
+import { ProjectResponse, ProjectCreateType, ProjectUpdateDto } from '@workspace/shared';
 
 import { $axios } from '../client';
 
-const buildFormData = (data: ProjectCreateType) => {
+const buildFormData = (data: ProjectCreateType | ProjectUpdateDto) => {
     const thumbs = data.thumbs;
     const renders = data.renders;
     delete data.thumbs;
@@ -23,14 +23,13 @@ export async function getProject(id: string) {
     return await $axios.get<ProjectResponse>(`/projects/${id}`);
 }
 
-export async function updateProject(id: string, data: ProjectCreateType) {
+export async function updateProject(id: string, data: ProjectUpdateDto) {
     const formData = buildFormData(data);
     return await $axios.put<ProjectResponse>(`/projects/${id}`, formData);
 }
 
 export async function createOne(data: ProjectCreateType) {
     const formData = buildFormData(data);
-    console.log(data);
     return await $axios.post<ProjectResponse>('/projects', formData);
 }
 
