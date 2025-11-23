@@ -24,6 +24,7 @@ const entities: unknown[] = [User, Session, Project];
                     synchronize: configService.get<boolean>('db.synchronize'),
                     bigNumberStrings: false,
                     entities: entities,
+                    migrations: ['../migrations/**/*.ts'],
                 } as TypeOrmModuleOptions;
             },
         }),

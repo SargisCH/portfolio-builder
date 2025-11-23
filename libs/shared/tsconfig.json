@@ -12,6 +12,16 @@
   ],
   "compilerOptions": {
     "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+"target": "ES2020", 
+    
+    // 2. The CRUCIAL FIX: Update the lib option
+    // This tells TypeScript to include definitions for ES2020/2022 features, 
+    // which contains AsyncIterable, BigInt64Array, etc.
+    "lib": [
+      "ES2022", // Includes ES2020, ES2018, etc.
+      "DOM",    // Include this if you are running in a browser environment
+      "DOM.Iterable" // Include this for modern iterable type definitions
+    ]
   }
 }

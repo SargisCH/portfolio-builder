@@ -1,78 +1,112 @@
 {
-  "name": "server",
-  "$schema": "https://raw.githubusercontent.com/nrwl/nx/master/packages/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/server/src",
-  "projectType": "application",
-  "targets": {
-    "build": {
-      "executor": "@nx/webpack:webpack",
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "target": "node",
-        "compiler": "tsc",
-        "isolatedConfig": true,
-        "webpackConfig": "apps/server/webpack.config.js",
-        "outputPath": "dist/apps/server",
-        "main": "apps/server/src/main.ts",
-        "tsConfig": "apps/server/tsconfig.app.json",
-        "assets": ["apps/server/src/assets", "apps/server/src/static"],
-        "additionalEntryPoints": [
-          {
-            "entryName": "cli",
-            "entryPath": "src/cli.ts"
-          }
-        ]
-      },
-      "configurations": {
-        "production": {
-          "optimization": true,
-          "extractLicenses": true,
-          "inspect": false
+    "name": "server",
+    "$schema": "https://raw.githubusercontent.com/nrwl/nx/master/packages/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/server/src",
+    "projectType": "application",
+    "targets": {
+        "build": {
+            "executor": "@nx/webpack:webpack",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "target": "node",
+                "compiler": "tsc",
+                "isolatedConfig": true,
+                "webpackConfig": "apps/server/webpack.config.js",
+                "outputPath": "dist/apps/server",
+                "main": "apps/server/src/main.ts",
+                "tsConfig": "apps/server/tsconfig.app.json",
+                "assets": ["apps/server/src/assets", "apps/server/src/static"],
+                "additionalEntryPoints": [
+                    {
+                        "entryName": "cli",
+                        "entryPath": "src/cli.ts"
+                    }
+                ]
+            },
+            "configurations": {
+                "production": {
+                    "optimization": true,
+                    "extractLicenses": true,
+                    "inspect": false
+                }
+            }
+        },
+        "buildMigrations": {
+            "executor": "@nx/webpack:webpack",
+            "options": {
+                "target": "node",
+                "compiler": "tsc",
+                "isolatedConfig": true,
+                "webpackConfig": "apps/server/webpack.config.js",
+                "outputPath": "dist/apps/server",
+                "main": "apps/server/src/main.ts",
+                "tsConfig": "apps/server/tsconfig.typeorm.json",
+
+                "additionalEntryPoints": [
+                    {
+                        "entryName": "cli",
+                        "entryPath": "src/cli.ts"
+                    },
+                    {
+                        "entryName": "typeorm-config",
+                        "entryPath": "src/typeorm-cli.config.ts"
+                    }
+                ]
+            }
+        },
+        "build-cli": {
+            "executor": "@nx/webpack:webpack",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "target": "node",
+                "compiler": "tsc",
+                "isolatedConfig": true,
+                "webpackConfig": "apps/server/webpack.config.js",
+                "outputPath": "dist/apps/server-cli",
+                "main": "apps/server/src/cli.ts",
+                "tsConfig": "apps/server/tsconfig.app.json",
+                "assets": ["apps/server/src/assets"]
+            },
+            "configurations": {
+                "production": {
+                    "optimization": true,
+                    "extractLicenses": true,
+                    "inspect": false
+                }
+            }
+        },
+        "serve": {
+            "executor": "@nx/js:node",
+            "options": {
+                "buildTarget": "server:build"
+            }
+        },
+        "lint": {
+            "executor": "@nx/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["apps/server/**/*.ts"],
+                "fix": true
+            }
+        },
+        "test": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "apps/server/jest.config.ts",
+                "passWithNoTests": true
+            }
+        },
+        "migration:run": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "typeorm migration:run -d dist/apps/server/typeorm-config.js"
+            }
+        },
+        "migration:generate": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "typeorm migration:generate -d dist/apps/server/typeorm-config.js  apps/server/src/app/migrations/"
+            }
         }
-      }
-    },
-    "build-cli": {
-      "executor": "@nx/webpack:webpack",
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "target": "node",
-        "compiler": "tsc",
-        "isolatedConfig": true,
-        "webpackConfig": "apps/server/webpack.config.js",
-        "outputPath": "dist/apps/server-cli",
-        "main": "apps/server/src/cli.ts",
-        "tsConfig": "apps/server/tsconfig.app.json",
-        "assets": ["apps/server/src/assets"]
-      },
-      "configurations": {
-        "production": {
-          "optimization": true,
-          "extractLicenses": true,
-          "inspect": false
-        }
-      }
-    },
-    "serve": {
-      "executor": "@nx/js:node",
-      "options": {
-        "buildTarget": "server:build"
-      }
-    },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["apps/server/**/*.ts"],
-        "fix": true
-      }
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["coverage/apps/server"],
-      "options": {
-        "jestConfig": "apps/server/jest.config.ts",
-        "passWithNoTests": true
-      }
     }
-  }
 }
