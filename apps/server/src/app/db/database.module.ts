@@ -25,6 +25,7 @@ const entities: unknown[] = [User, Session, Project];
                     bigNumberStrings: false,
                     entities: entities,
                     migrations: ['../migrations/**/*.ts'],
+                    ssl: true,
                 } as TypeOrmModuleOptions;
             },
         }),

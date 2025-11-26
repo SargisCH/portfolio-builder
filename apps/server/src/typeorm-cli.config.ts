@@ -24,5 +24,5 @@ export default new DataSource({
     database: configService.get<string>('DATABASE_NAME'),
     entities: [User, Project, Session],
     migrations: [Migrations1763890156344],
-    ssl: false,
+    ssl: true,
 });

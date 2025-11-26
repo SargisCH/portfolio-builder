@@ -36,3 +36,6 @@ export async function createOne(data: ProjectCreateType) {
 export async function getProjects() {
     return await $axios.get<ProjectResponse[]>(`/projects/`);
 }
+export async function deleteOne(id: string) {
+    return await $axios.delete<number>(`/projects/${id}`);
+}

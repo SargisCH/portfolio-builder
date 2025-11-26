@@ -13,12 +13,14 @@
         ]"
     />
     <div class="col-12 row">
+        <p>{{ imagesRendered.length }}</p>
         <div
             v-for="(imageObject, index) in imagesRendered"
             :key="imageObject.originalIndex || imageObject"
         >
             <div class="q-ml-md relative-position image-item">
-                <ImageActionsOverlay @delete="onDelete(imageObject.originalIndex || -1, index)" />
+                <p>{{ imageObject.originalIndex }} {{ imageObject.index }}</p>
+                <ImageActionsOverlay @delete="onDelete(imageObject.originalIndex ?? -1, index)" />
                 <q-img
                     :src="imageObject.image || imageObject"
                     spinner-color="white"
@@ -105,24 +107,21 @@ const paste = (indexes: { index: number; originalIndex: number }) => {
 const onDelete = (indexToDelete: number, renderedIndex: number) => {
     if (indexToDelete > -1) {
         const items = Array.from(images.value);
-        items.splice(indexToDelete);
+        items.splice(indexToDelete, 1);
         images.value = items;
     }
-    if (indexToDelete === -1) {
-        emit('delete:savedImage', imagesRendered[renderedIndex]);
-    }
-    imagesRendered.value.splice(renderedIndex, 1);
+    imagesRendered.value = imagesRendered.value
+        .slice(0, renderedIndex)
+        .concat(imagesRendered.value.slice(renderedIndex + 1));
     emit('update:modelValue', images.value);
 };
 
-watch(images, () => {
+watch(images, (newImages, prevImages) => {
+    if (newImages.length <= prevImages.length) return;
     emit('update:modelValue', images.value);
-    if (images.value.length < imagesRendered.value.length) return;
-    const imagesAdded = images.value.slice(
-        imagesRendered.value.length ? imagesRendered.value.length - 1 : 0
-    );
+    const imagesAdded = images.value.slice((newImages.length - prevImages.length) * -1);
     parseImages(imagesAdded).then((imagesParsed: { originalIndex: number; image: string }[]) => {
-        imagesRendered.value = imagesParsed;
+        imagesRendered.value = [...imagesRendered.value, ...imagesParsed];
     });
 });
 onMounted(() => {

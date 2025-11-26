@@ -101,12 +101,7 @@
 
 <script setup lang="ts">
 import { api, usePromiseState, ResponseError, convertImageSrcsToFile } from '@/common';
-import {
-    ProjectResponse,
-    ProjectCreateDto,
-    projectCreateSchema,
-    projectUpdateSchema,
-} from '@workspace/shared';
+import { ProjectResponse, projectCreateSchema, projectUpdateSchema } from '@workspace/shared';
 import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
 import ImageUploadList from '@/app/components/features/project/ImageUploadList.vue';
@@ -122,8 +117,6 @@ const renders = ref<File[]>();
 
 const preloadedThumbs = ref<File[]>();
 const preloadedRenders = ref<File[]>();
-const deletedThumbs: string[] = [];
-const deletedRenders: string[] = [];
 const thumbsModelValue = ref<string[]>();
 const rendersModelValue = ref<string[]>();
 

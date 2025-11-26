@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Project } from '@/app/db/project.entity';
 import {
     ProjectCreateDto,
@@ -45,5 +45,11 @@ export class ProjectService {
     ) {
         const createdProject = this.projectRepository.create(project);
         return createdProject.save();
+    }
+    async deleteOne(id: string): Promise<number> {
+        const query = await Project.delete({ id });
+
+        if (query.affected === 0) throw new NotFoundException();
+        return query.affected;
     }
 }

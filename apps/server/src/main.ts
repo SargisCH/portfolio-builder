@@ -20,6 +20,7 @@ async function bootstrap() {
 
     const port = configService.get<number>('http.port');
     const origins = configService.get<string[]>('http.cors');
+    console.log('origins', origins);
     const secure = configService.get<boolean>('http.secure');
     const keyPath = configService.get<string>('http.key');
     const certPath = configService.get<string>('http.cert');

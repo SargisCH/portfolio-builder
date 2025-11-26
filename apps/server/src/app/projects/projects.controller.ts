@@ -1,6 +1,7 @@
 import {
     Body,
     Controller,
+    Delete,
     Get,
     Param,
     ParseUUIDPipe,
@@ -91,5 +92,9 @@ export class ProjectsController {
             renders: uploadedRendersUrl,
         };
         return await this.projectsService.createOne({ ...projectToCreate });
+    }
+    @Delete('/:id')
+    async deleteOne(@Param('id', ParseUUIDPipe) id: string): Promise<number> {
+        return await this.projectsService.deleteOne(id);
     }
 }

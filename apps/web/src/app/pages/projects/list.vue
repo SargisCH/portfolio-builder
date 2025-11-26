@@ -56,6 +56,14 @@
                                 icon="mdi-cog"
                                 :to="{ name: 'project', params: { id: props.value } }"
                             />
+                            <q-btn
+                                size="10px"
+                                class="q-ml-sm"
+                                round
+                                color="negative"
+                                icon="mdi-delete"
+                                @click="projectDeleteDialog(props.value)"
+                            />
                         </q-td>
                     </template>
                 </q-table>
@@ -69,9 +77,8 @@ import { api, usePromiseState, ResponseError } from '@/common';
 import { ProjectResponse } from '@workspace/shared';
 import { QTableColumn, QTableProps, useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
-import { useAccountStore } from '@/stores/account';
+import ProjectDeleteDialog from '@/app/components/dialogs/ProjectDeleteDialog.vue';
 
-const accountStore = useAccountStore();
 const $q = useQuasar();
 const { t } = useI18n();
 
@@ -123,6 +130,18 @@ const projectsAction = usePromiseState<ProjectResponse[], ResponseError>(async (
     const res = await api.projects.getProjects();
     return res.data;
 });
+const deleteAction = usePromiseState<void, ResponseError>(async (projectId: string) => {
+    await api.projects.deleteOne(projectId);
+    projectsAction.execute(500);
+});
+
+function projectDeleteDialog(projectId: string): void {
+    $q.dialog({
+        component: ProjectDeleteDialog,
+    }).onOk(() => {
+        deleteAction.execute(500, projectId);
+    });
+}
 
 projectsAction.execute(500, pagination.value);
 </script>
