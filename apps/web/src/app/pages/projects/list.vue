@@ -72,6 +72,14 @@
     </AppPage>
 </template>
 
+<style module lang="scss">
+.text-ellipsis {
+    max-width: 150px;
+    text-overflow: ellipsis;
+    overflow-x: hidden;
+}
+</style>
+
 <script setup lang="ts">
 import { api, usePromiseState, ResponseError } from '@/common';
 import { ProjectResponse } from '@workspace/shared';
@@ -105,6 +113,7 @@ const columns: QTableColumn<ProjectResponse>[] = [
         field: 'description',
         align: 'left',
         sortable: true,
+        classes: () => 'text-ellipsis',
     },
     {
         name: 'location',
