@@ -19,7 +19,6 @@
             :key="imageObject.originalIndex || imageObject"
         >
             <div class="q-ml-md relative-position image-item">
-                <p>{{ imageObject.originalIndex }} {{ imageObject.index }}</p>
                 <ImageActionsOverlay @delete="onDelete(imageObject.originalIndex ?? -1, index)" />
                 <q-img
                     :src="imageObject.image || imageObject"

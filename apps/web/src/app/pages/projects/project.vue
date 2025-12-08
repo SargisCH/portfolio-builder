@@ -29,6 +29,7 @@
                                 name="description"
                                 v-model="form.description"
                                 :label="$t('description')"
+                                type="textarea"
                                 outlined
                             >
                             </VInput>
@@ -47,6 +48,12 @@
                                 v-model="form.date"
                                 :label="$t('date')"
                                 outlined
+                            >
+                            </VInput>
+                            <VInput
+                                class="col-12 col-lg-6 invisible"
+                                disabled="true"
+                                name="placeholder"
                             >
                             </VInput>
                             <VInput
