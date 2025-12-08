@@ -82,9 +82,11 @@
 
 <script setup lang="ts">
 import { api, usePromiseState, ResponseError } from '@/common';
+import { useCssModule } from 'vue';
 import { ProjectResponse } from '@workspace/shared';
 import { QTableColumn, QTableProps, useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
+const $style = useCssModule();
 import ProjectDeleteDialog from '@/app/components/dialogs/ProjectDeleteDialog.vue';
 
 const $q = useQuasar();
@@ -113,7 +115,7 @@ const columns: QTableColumn<ProjectResponse>[] = [
         field: 'description',
         align: 'left',
         sortable: true,
-        classes: () => 'text-ellipsis',
+        classes: () => $style['text-ellipsis'],
     },
     {
         name: 'location',
@@ -125,6 +127,12 @@ const columns: QTableColumn<ProjectResponse>[] = [
         name: 'tools',
         label: 'tools',
         field: 'tools',
+        align: 'left',
+    },
+    {
+        name: 'sortIndex',
+        label: 'Sort Index',
+        field: 'sortIndex',
         align: 'left',
     },
     {

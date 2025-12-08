@@ -7,4 +7,5 @@ export interface ProjectResponse {
     location?: string;
     renders: string[];
     thumbs: string[];
+    sortIndex?: number;
 }

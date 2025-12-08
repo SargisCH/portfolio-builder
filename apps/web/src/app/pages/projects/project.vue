@@ -49,6 +49,14 @@
                                 outlined
                             >
                             </VInput>
+                            <VInput
+                                class="col-12 col-lg-6"
+                                name="sortIndex"
+                                v-model="form.sortIndex"
+                                label="Sort Index"
+                                outlined
+                            >
+                            </VInput>
                             <ImageUploadList
                                 :modelValue="thumbsModelValue"
                                 placeholder="Upload thumbs"
@@ -135,6 +143,7 @@ const form = reactive<ProjectResponse>({
     renders: [],
     thumbs: [],
     tools: '',
+    sortIndex: null,
 });
 
 function loadForm(data: ProjectResponse) {
@@ -145,6 +154,7 @@ function loadForm(data: ProjectResponse) {
     form.thumbs = data.thumbs;
     form.tools = data.tools;
     form.date = data.date;
+    form.sortIndex = data.sortIndex;
 }
 const saveAction = usePromiseState<void, ResponseError>(async () => {
     const submitData = {

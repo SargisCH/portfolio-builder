@@ -1,4 +1,4 @@
-import { array, date, mixed, object, ObjectSchema, setLocale, string } from 'yup';
+import { array, date, mixed, number, object, ObjectSchema, setLocale, string } from 'yup';
 import { UseSchema, yupLocale } from '@workspace/shared';
 
 setLocale(yupLocale);
@@ -17,6 +17,7 @@ export const projectCreateSchema: ObjectSchema<ProjectCreateDto> = object().shap
     location: string().optional(),
     renders: array().optional(),
     thumbs: array().optional(),
+    sortIndex: number().optional(),
 });
 export const projectUpdateSchema: ObjectSchema<ProjectUpdateDto> = object().shape({
     title: string().optional(),
@@ -26,6 +27,7 @@ export const projectUpdateSchema: ObjectSchema<ProjectUpdateDto> = object().shap
     location: string().optional(),
     renders: array().optional(),
     thumbs: array().optional(),
+    sortIndex: number().optional(),
 });
 
 @UseSchema(projectCreateSchema)
@@ -37,6 +39,7 @@ export class ProjectCreateDto {
     location?: string;
     renders: File[];
     thumbs: File[];
+    sortIndex?: number;
 }
 
 export type ProjectCreateType = Omit<ProjectCreateDto, 'renders' | 'thumbs'> & {
@@ -51,4 +54,5 @@ export type ProjectUpdateDto = {
     tools?: string;
     date?: string;
     location?: string;
+    sortIndex?: number;
 };

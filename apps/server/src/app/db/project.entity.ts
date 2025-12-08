@@ -25,6 +25,9 @@ export class Project extends BaseEntity {
     @Column('text', { array: true })
     thumbs: string[];
 
+    @Column('int', { nullable: true })
+    sortIndex?: number;
+
     @Column({
         default: () => 'CURRENT_TIMESTAMP',
     })

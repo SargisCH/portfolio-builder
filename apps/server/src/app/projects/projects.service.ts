@@ -1,11 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Project } from '@/app/db/project.entity';
-import {
-    ProjectCreateDto,
-    ProjectCreateType,
-    ProjectResponse,
-    ProjectUpdateDto,
-} from '@workspace/shared';
+import { ProjectCreateDto, ProjectResponse } from '@workspace/shared';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
