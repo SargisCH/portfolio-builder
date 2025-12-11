@@ -14,6 +14,7 @@ const buildFormData = (data: ProjectCreateType | ProjectUpdateDto) => {
     thumbs.forEach((file) => {
         formData.append('thumbs', file);
     });
+
     renders.forEach((file) => {
         formData.append('renders', file);
     });

@@ -20,12 +20,14 @@ import {
 } from '../../../../../libs/shared/src/projects';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { StorageService } from '../storage/storage.service';
+import { WinstonLogger } from '@/common';
 
 @Controller('/projects')
 export class ProjectsController {
     constructor(
         private readonly projectsService: ProjectService,
-        private readonly storageService: StorageService
+        private readonly storageService: StorageService,
+        private readonly logger: WinstonLogger
     ) {}
 
     @Get('/')
@@ -72,20 +74,24 @@ export class ProjectsController {
         @UploadedFiles() files: { thumbs: Express.Multer.File[]; renders: Express.Multer.File[] },
         @Body() project: ProjectCreateDto
     ): Promise<ProjectResponse> {
+        this.logger.info(`thumbnalis ${files.thumbs.length}`);
         const uploadedThumbUrls = await this.storageService.uploadMultiple(
             files.thumbs.map((thumb) => ({
-                key: thumb.originalname,
+                key: `${project.title}/thumbs/${thumb.originalname}`,
                 body: thumb.buffer,
                 contentType: 'application/json',
             }))
         );
+        this.logger.log(`renders ${files.renders.length}`);
         const uploadedRendersUrl = await this.storageService.uploadMultiple(
             files.renders.map((render) => ({
-                key: render.originalname,
+                key: `${project.title}/renders/${render.originalname}`,
                 body: render.buffer,
                 contentType: 'application/json',
             }))
         );
+        this.logger.info(`uploaded thumbs ${JSON.stringify(uploadedThumbUrls)}`);
+        this.logger.info(`uploaded renders ${JSON.stringify(uploadedRendersUrl)}`);
         const projectToCreate = {
             ...project,
             thumbs: uploadedThumbUrls,

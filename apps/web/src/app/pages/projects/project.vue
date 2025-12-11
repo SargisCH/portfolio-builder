@@ -169,6 +169,7 @@ const saveAction = usePromiseState<void, ResponseError>(async () => {
         thumbs: thumbs.value,
         renders: renders.value,
     };
+    console.log('thumbs', thumbs.value);
     if (isNew) {
         await api.projects.createOne(submitData);
     } else {

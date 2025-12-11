@@ -19,38 +19,26 @@
             :key="imageObject.originalIndex || imageObject"
         >
             <div class="q-ml-md relative-position image-item">
-                <ImageActionsOverlay @delete="onDelete(imageObject.originalIndex ?? -1, index)" />
+                <ImageActionsOverlay @delete="onDelete(index)" />
                 <q-img
                     :src="imageObject.image || imageObject"
                     spinner-color="white"
                     style="height: 240px; width: 250px"
                 />
+                <span>{{ imageObject.id }}</span>
             </div>
             <div class="q-ml-md">
                 <q-btn
-                    v-if="swapIndex.index > -1 && swapIndex.index !== index"
+                    v-if="swapIndex > -1 && swapIndex !== index"
                     type="button"
-                    @click="
-                        paste({
-                            index,
-                            originalIndex: imageObject.originalIndex,
-                        })
-                    "
+                    @click="paste(index)"
                 >
                     Paste
                 </q-btn>
-                <q-btn
-                    type="button"
-                    v-else-if="swapIndex.index !== index"
-                    @click="
-                        swap({
-                            index,
-                            originalIndex: imageObject.originalIndex,
-                        })
-                    "
+                <q-btn type="button" v-else-if="swapIndex !== index" @click="swap(index)"
                     >Swap</q-btn
                 >
-                <q-btn type="button" v-else-if="swapIndex.index === index" @click="swapCancel()"
+                <q-btn type="button" v-else-if="swapIndex === index" @click="swapCancel()"
                     >Cancel</q-btn
                 >
             </div>
@@ -80,38 +68,33 @@ const emit = defineEmits(['update:modelValue', 'delete:savedImage']);
 
 const images = ref<File[]>(props.preloadedImages || []);
 const imagesRendered = ref(props.modelValue || []);
-const swapIndex = ref({
-    index: -1,
-    originalIndex: -1,
-});
+const swapIndex = ref(-1);
 
-const swap = (indexes: { index: number; originalIndex: number }) => {
-    const { index, originalIndex } = indexes;
-    swapIndex.value = { index, originalIndex };
+const swap = (index: number) => {
+    swapIndex.value = index;
 };
 const swapCancel = () => {
-    swapIndex.value = { index: -1, originalIndex: -1 };
+    swapIndex.value = -1;
 };
-const paste = (indexes: { index: number; originalIndex: number }) => {
-    const { index, originalIndex } = indexes;
-    const tempThumb = images.value[originalIndex];
-    const uploadedTemp = imagesRendered.value[index];
-    images.value[originalIndex] = images.value[swapIndex.value.originalIndex];
-    imagesRendered.value[index] = imagesRendered.value[swapIndex.value.index];
-    images.value[swapIndex.value.originalIndex] = tempThumb;
-    imagesRendered.value[swapIndex.value.index] = uploadedTemp;
-    swapIndex.value = { index: -1, originalIndex: -1 };
+const paste = (index: number) => {
+    const tempImage = images.value[index];
+    const renderedTemp = imagesRendered.value[index];
+    images.value[index] = images.value[swapIndex.value];
+    imagesRendered.value[index] = imagesRendered.value[swapIndex.value];
+    images.value[swapIndex.value] = tempImage;
+    imagesRendered.value[swapIndex.value] = renderedTemp;
+    swapIndex.value = -1;
     emit('update:modelValue', images.value);
 };
-const onDelete = (indexToDelete: number, renderedIndex: number) => {
-    if (indexToDelete > -1) {
+const onDelete = (index: number) => {
+    if (index > -1) {
         const items = Array.from(images.value);
-        items.splice(indexToDelete, 1);
+        items.splice(index, 1);
         images.value = items;
     }
     imagesRendered.value = imagesRendered.value
-        .slice(0, renderedIndex)
-        .concat(imagesRendered.value.slice(renderedIndex + 1));
+        .slice(0, index)
+        .concat(imagesRendered.value.slice(index + 1));
     emit('update:modelValue', images.value);
 };
 

@@ -7,7 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app/app.module';
-import { YupValidationPipe } from './common';
+import { WinstonLogger, YupValidationPipe } from './common';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { Logger } from '@nestjs/common';
 
@@ -16,11 +16,10 @@ async function bootstrap() {
     const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
 
     const configService = app.get(ConfigService);
-    const logger = new Logger('APP');
+    const logger = app.get(WinstonLogger);
 
     const port = configService.get<number>('http.port');
     const origins = configService.get<string[]>('http.cors');
-    console.log('origins', origins);
     const secure = configService.get<boolean>('http.secure');
     const keyPath = configService.get<string>('http.key');
     const certPath = configService.get<string>('http.cert');
@@ -60,7 +59,7 @@ async function bootstrap() {
             );
         } catch (e) {
             logger.error(`The HTTPS server cannot be started`);
-            logger.error(e);
+            logger.error(e.toString());
         }
     } else {
         http.createServer(server).listen(configService.get<number>('http.port'));

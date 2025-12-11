@@ -6,7 +6,11 @@ export const parseImages = async (
         images.forEach((image, index) => {
             const reader = new FileReader();
             reader.onload = function (e) {
-                imagesResult.push({ originalIndex: index, image: e.target.result });
+                imagesResult.push({
+                    originalIndex: index,
+                    image: e.target.result,
+                    id: `${index}_ image.name`,
+                });
                 if (imagesResult.length === images.length) {
                     resolve(imagesResult);
                 }

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
+import { WinstonLogger } from '@/common';
 
 const getS3Client = (endpoint: string, accessToken: string, secretAccessKey: string) => {
     return new S3Client({
@@ -15,7 +16,10 @@ const getS3Client = (endpoint: string, accessToken: string, secretAccessKey: str
 
 @Injectable()
 export class StorageService {
-    constructor(private readonly configService: ConfigService) {}
+    constructor(
+        private readonly configService: ConfigService,
+        private readonly logger: WinstonLogger
+    ) {}
 
     async uploadFile(key: string, body: Buffer, contentType: string): Promise<string> {
         const s3Client = getS3Client(
@@ -23,6 +27,7 @@ export class StorageService {
             this.configService.get<string>('cloud.accessToken') || '',
             this.configService.get<string>('cloud.secretAccessKey') || ''
         );
+        this.logger.info(`File upload started ${key}`);
         const command = new PutObjectCommand({
             Bucket: this.configService.get('cloud.bucketName'),
             Key: key,
@@ -30,6 +35,7 @@ export class StorageService {
             ContentType: contentType,
         });
         await s3Client.send(command);
+        this.logger.info(`File upload finished ${key}`);
         return this.configService.get('cloud.bucketPublicUrl') + `/${key}`;
     }
     async uploadMultiple(files: { key: string; body: Buffer; contentType: string }[]) {
