@@ -39,33 +39,39 @@ export class ProjectsController {
         return this.projectsService.getProjectById(id);
     }
 
-    @Put('/:id')
+    @Post('/:id/upload')
     @UseInterceptors(FileFieldsInterceptor([{ name: 'thumbs' }, { name: 'renders' }]))
+    async uploadImages(
+        @UploadedFiles() files: { thumbs?: Express.Multer.File[]; renders?: Express.Multer.File[] },
+        @Param('id', ParseUUIDPipe) id: string
+    ): Promise<{ thumbs: string[]; renders: string[] }> {
+        const thumbFiles = (files.thumbs || []).filter((f) => f.size > 0);
+        const renderFiles = (files.renders || []).filter((f) => f.size > 0);
+
+        const uploadedThumbs = await this.storageService.uploadMultiple(
+            thumbFiles.map((f) => ({
+                key: `${id}/thumbs/${f.originalname}`,
+                body: f.buffer,
+                contentType: f.mimetype || 'application/octet-stream',
+            }))
+        );
+        const uploadedRenders = await this.storageService.uploadMultiple(
+            renderFiles.map((f) => ({
+                key: `${id}/renders/${f.originalname}`,
+                body: f.buffer,
+                contentType: f.mimetype || 'application/octet-stream',
+            }))
+        );
+
+        return { thumbs: uploadedThumbs, renders: uploadedRenders };
+    }
+
+    @Put('/:id')
     async updateSelf(
-        @UploadedFiles() files: { thumbs: Express.Multer.File[]; renders: Express.Multer.File[] },
         @Param('id', ParseUUIDPipe) id: string,
         @Body() project: ProjectUpdateDto
     ): Promise<ProjectResponse> {
-        const uploadedThumbUrls = await this.storageService.uploadMultiple(
-            files.thumbs.map((thumb) => ({
-                key: thumb.originalname,
-                body: thumb.buffer,
-                contentType: 'application/json',
-            }))
-        );
-        const uploadedRendersUrl = await this.storageService.uploadMultiple(
-            files.renders.map((render) => ({
-                key: render.originalname,
-                body: render.buffer,
-                contentType: 'application/json',
-            }))
-        );
-        const newProjectDetails = {
-            ...project,
-            thumbs: uploadedThumbUrls,
-            renders: uploadedRendersUrl,
-        };
-        return await this.projectsService.updateProject(id, newProjectDetails);
+        return await this.projectsService.updateProject(id, project);
     }
 
     @Post('/')

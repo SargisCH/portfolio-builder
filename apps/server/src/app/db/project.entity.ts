@@ -10,14 +10,17 @@ export class Project extends BaseEntity {
     @Column({ nullable: true })
     description: string;
 
-    @Column()
+    @Column({ nullable: true })
     tools: string;
 
-    @Column()
+    @Column({ nullable: true })
     date: string;
 
     @Column({ nullable: true })
     location: string;
+
+    @Column({ nullable: true })
+    area: string;
 
     @Column('text', { array: true })
     renders: string[];

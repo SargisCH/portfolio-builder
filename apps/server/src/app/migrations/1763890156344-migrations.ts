@@ -13,7 +13,14 @@ export class Migrations1763890156344 implements MigrationInterface {
         await queryRunner.query(
             `CREATE INDEX "IDX_57de40bc620f456c7311aa3a1e" ON "sessions" ("userId") `
         );
-        await queryRunner.query(`CREATE TYPE "public"."users_role_enum" AS ENUM('user', 'admin')`);
+        const [enumExists] = await queryRunner.query(
+            `SELECT 1 FROM pg_type WHERE typname = 'users_role_enum'`
+        );
+        if (!enumExists) {
+            await queryRunner.query(
+                `CREATE TYPE "public"."users_role_enum" AS ENUM('user', 'admin')`
+            );
+        }
         await queryRunner.query(
             `CREATE TABLE "users" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "role" "public"."users_role_enum" NOT NULL DEFAULT 'user', "email" character varying(255) NOT NULL, "hash" character varying NOT NULL, "firstName" character varying NOT NULL, "lastName" character varying NOT NULL, "position" character varying, "isActive" boolean NOT NULL DEFAULT true, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`
         );

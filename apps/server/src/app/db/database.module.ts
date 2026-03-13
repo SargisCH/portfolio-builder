@@ -6,7 +6,6 @@ import { User } from './user.entity';
 import { Project } from './project.entity';
 
 const entities: unknown[] = [User, Session, Project];
-
 @Module({
     imports: [
         TypeOrmModule.forRootAsync({
@@ -14,6 +13,9 @@ const entities: unknown[] = [User, Session, Project];
             inject: [ConfigService],
 
             useFactory: async (configService: ConfigService) => {
+                const host = configService.get<string>('db.host');
+                const port = configService.get<number>('db.port');
+                console.log(`[DB CONFIG] Host: ${host}, Port: ${port}`);
                 return {
                     type: configService.get<string>('db.type'),
                     host: configService.get<string>('db.host'),
@@ -25,7 +27,7 @@ const entities: unknown[] = [User, Session, Project];
                     bigNumberStrings: false,
                     entities: entities,
                     migrations: ['../migrations/**/*.ts'],
-                    ssl: true,
+                    ssl: false,
                 } as TypeOrmModuleOptions;
             },
         }),

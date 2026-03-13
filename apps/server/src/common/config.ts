@@ -44,6 +44,7 @@ const configSchema = object().shape({
 });
 
 export const config = () => {
+    console.log('processssss,', process.env.DATABASE_HOST);
     try {
         const _config = {
             http: {

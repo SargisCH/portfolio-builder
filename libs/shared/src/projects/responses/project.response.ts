@@ -5,6 +5,7 @@ export interface ProjectResponse {
     tools: string;
     date: string;
     location?: string;
+    area?: string;
     renders: string[];
     thumbs: string[];
     sortIndex?: number;

@@ -1,5 +1,6 @@
 const { composePlugins, withNx } = require('@nx/webpack');
 const Dotenv = require('dotenv-webpack');
+const webpack = require('webpack');
 
 // Nx plugins for webpack.
 module.exports = composePlugins(withNx(), (config) => {

@@ -13,11 +13,18 @@ export const projectCreateSchema: ObjectSchema<ProjectCreateDto> = object().shap
     title: string().required(),
     description: string().optional(),
     tools: string().optional(),
-    date: string().required(),
+    date: string().optional(),
     location: string().optional(),
-    renders: array().optional(),
-    thumbs: array().optional(),
+    area: string().optional(),
     sortIndex: number().optional(),
+    renders: array().transform((value, originalValue) => {
+        if (!Array.isArray(originalValue)) return [];
+        return value;
+    }).optional(),
+    thumbs: array().transform((value, originalValue) => {
+        if (!Array.isArray(originalValue)) return [];
+        return value;
+    }).optional(),
 });
 export const projectUpdateSchema: ObjectSchema<ProjectUpdateDto> = object().shape({
     title: string().optional(),
@@ -25,6 +32,7 @@ export const projectUpdateSchema: ObjectSchema<ProjectUpdateDto> = object().shap
     tools: string().optional(),
     date: string().optional(),
     location: string().optional(),
+    area: string().optional(),
     renders: array().optional(),
     thumbs: array().optional(),
     sortIndex: number().optional(),
@@ -35,24 +43,30 @@ export class ProjectCreateDto {
     title: string;
     description?: string;
     tools?: string;
-    date: string;
+    date?: string;
     location?: string;
-    renders: File[];
-    thumbs: File[];
-    sortIndex?: number;
+    area?: string;
+    renders?: File[];
+    thumbs?: File[];
 }
 
 export type ProjectCreateType = Omit<ProjectCreateDto, 'renders' | 'thumbs'> & {
-    thumbs: File[];
-    renders: File[];
-};
-export type ProjectUpdateDto = {
     thumbs?: File[];
     renders?: File[];
+};
+export type ProjectUpdateDto = {
+    thumbs?: string[];
+    renders?: string[];
     title?: string;
     description?: string;
     tools?: string;
     date?: string;
     location?: string;
+    area?: string;
     sortIndex?: number;
+};
+
+export type UploadImagesResponse = {
+    thumbs: string[];
+    renders: string[];
 };

@@ -29,7 +29,6 @@
                                 name="description"
                                 v-model="form.description"
                                 :label="$t('description')"
-                                type="textarea"
                                 outlined
                             >
                             </VInput>
@@ -38,6 +37,23 @@
                                 name="location"
                                 v-model="form.location"
                                 :label="$t('location')"
+                                outlined
+                            >
+                            </VInput>
+                            <VInput
+                                class="col-12 col-lg-6"
+                                name="area"
+                                v-model="form.area"
+                                :label="$t('area')"
+                                outlined
+                            >
+                            </VInput>
+
+                            <VInput
+                                class="col-12 col-lg-6"
+                                name="tools"
+                                v-model="form.tools"
+                                :label="$t('tools')"
                                 outlined
                             >
                             </VInput>
@@ -64,22 +80,29 @@
                                 outlined
                             >
                             </VInput>
-                            <ImageUploadList
-                                :modelValue="thumbsModelValue"
-                                placeholder="Upload thumbs"
-                                @update:modelValue="handleThumbsUpdate"
-                                :preloadedImages="preloadedThumbs"
-                            />
-                            <ImageUploadList
-                                :modelValue="rendersModelValue"
-                                placeholder="Upload renders"
-                                @update:modelValue="handlerRendersUpdate"
-                                :preloadedImages="preloadedRenders"
-                            />
+                            <div class="col-12" v-if="isNew || preloadedThumbs !== undefined">
+                                <ImageUploadList
+                                    :key="thumbsKey"
+                                    placeholder="Upload thumbs"
+                                    @update:modelValue="handleThumbsUpdate"
+                                    :preloadedImages="preloadedThumbs"
+                                />
+                            </div>
+                            <div class="col-12" v-if="isNew || preloadedRenders !== undefined">
+                                <ImageUploadList
+                                    :key="rendersKey"
+                                    placeholder="Upload renders"
+                                    @update:modelValue="handlerRendersUpdate"
+                                    :preloadedImages="preloadedRenders"
+                                />
+                            </div>
                         </q-card-section>
 
                         <q-card-section class="text-center text-negative" v-if="saveError">
                             {{ saveError }}
+                        </q-card-section>
+                        <q-card-section class="text-center text-warning" v-if="hasUnuploadedFiles && !isNew">
+                            There are files that haven't been uploaded yet. Please upload before saving.
                         </q-card-section>
                     </template>
 
@@ -87,11 +110,24 @@
                         <q-space />
 
                         <q-btn
-                            icon="mdi-check  "
+                            v-if="hasUnuploadedFiles && !isNew"
+                            icon="mdi-upload"
+                            label="Upload"
+                            type="button"
+                            :loading="uploadAction.isLoading"
+                            :disable="uploadAction.isLoading"
+                            color="secondary"
+                            rounded
+                            class="q-mr-sm"
+                            @click="uploadAction.execute()"
+                        />
+
+                        <q-btn
+                            icon="mdi-check"
                             :label="$t('save')"
                             type="submit"
                             :loading="saveAction.isLoading"
-                            :disable="saveAction.isLoading"
+                            :disable="saveAction.isLoading || (hasUnuploadedFiles && !isNew)"
                             color="primary"
                             rounded
                         />
@@ -106,6 +142,7 @@
     > .overlay {
         visibility: hidden;
     }
+
     &:hover {
         > .overlay {
             visibility: visible;
@@ -115,7 +152,7 @@
 </style>
 
 <script setup lang="ts">
-import { api, usePromiseState, ResponseError, convertImageSrcsToFile } from '@/common';
+import { api, usePromiseState, ResponseError } from '@/common';
 import { ProjectResponse, projectCreateSchema, projectUpdateSchema } from '@workspace/shared';
 import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
@@ -127,26 +164,34 @@ const route = useRoute();
 const router = useRouter();
 const isNew = route.params.id === 'new';
 
-const thumbs = ref<File[]>();
-const renders = ref<File[]>();
+const thumbs = ref<(File | string)[]>();
+const renders = ref<(File | string)[]>();
 
-const preloadedThumbs = ref<File[]>();
-const preloadedRenders = ref<File[]>();
-const thumbsModelValue = ref<string[]>();
-const rendersModelValue = ref<string[]>();
+const preloadedThumbs = ref<string[]>();
+const preloadedRenders = ref<string[]>();
 
-function handleThumbsUpdate(images: File[]) {
+const thumbsKey = ref(0);
+const rendersKey = ref(0);
+
+function handleThumbsUpdate(images: (File | string)[]) {
     thumbs.value = images;
 }
-function handlerRendersUpdate(images: File[]) {
+function handlerRendersUpdate(images: (File | string)[]) {
     renders.value = images;
 }
+
+const hasUnuploadedFiles = computed(() => {
+    const thumbHas = (thumbs.value || []).some((f) => f instanceof File);
+    const renderHas = (renders.value || []).some((f) => f instanceof File);
+    return thumbHas || renderHas;
+});
 
 const form = reactive<ProjectResponse>({
     title: '',
     description: '',
     location: '',
-    date: null,
+    area: '',
+    date: '',
     renders: [],
     thumbs: [],
     tools: '',
@@ -157,23 +202,54 @@ function loadForm(data: ProjectResponse) {
     form.title = data.title;
     form.description = data.description;
     form.location = data.location;
+    form.area = data.area;
     form.renders = data.renders;
     form.thumbs = data.thumbs;
     form.tools = data.tools;
     form.date = data.date;
     form.sortIndex = data.sortIndex;
 }
+
+const uploadAction = usePromiseState<void, ResponseError>(async () => {
+    const thumbFiles = (thumbs.value || []).filter((f): f is File => f instanceof File);
+    const renderFiles = (renders.value || []).filter((f): f is File => f instanceof File);
+
+    const { data } = await api.projects.uploadImages(route.params.id as string, {
+        thumbs: thumbFiles,
+        renders: renderFiles,
+    });
+
+    // Replace File objects with the returned URLs, preserving order
+    let tIdx = 0;
+    const resolvedThumbs = (thumbs.value || []).map((item) =>
+        item instanceof File ? data.thumbs[tIdx++] : item
+    ) as string[];
+
+    let rIdx = 0;
+    const resolvedRenders = (renders.value || []).map((item) =>
+        item instanceof File ? data.renders[rIdx++] : item
+    ) as string[];
+
+    // Update preloaded URLs and remount the components with the resolved state
+    preloadedThumbs.value = resolvedThumbs;
+    preloadedRenders.value = resolvedRenders;
+    thumbsKey.value++;
+    rendersKey.value++;
+});
+
 const saveAction = usePromiseState<void, ResponseError>(async () => {
-    const submitData = {
-        ...form,
-        thumbs: thumbs.value,
-        renders: renders.value,
-    };
-    console.log('thumbs', thumbs.value);
     if (isNew) {
-        await api.projects.createOne(submitData);
+        await api.projects.createOne({
+            ...form,
+            thumbs: (thumbs.value || []).filter((f): f is File => f instanceof File),
+            renders: (renders.value || []).filter((f): f is File => f instanceof File),
+        });
     } else {
-        await api.projects.updateProject(route.params.id as string, submitData);
+        await api.projects.updateProject(route.params.id as string, {
+            ...form,
+            thumbs: (thumbs.value || []) as string[],
+            renders: (renders.value || []) as string[],
+        });
     }
     $q.notify({
         icon: 'mdi-check',
@@ -188,9 +264,8 @@ const projectAction = usePromiseState<ProjectResponse | void, ResponseError>(asy
     if (isNew) return;
     try {
         const { data } = await api.projects.getProject(route.params.id as string);
-        preloadedThumbs.value = await convertImageSrcsToFile(data.thumbs);
-        preloadedRenders.value = await convertImageSrcsToFile(data.renders);
-
+        preloadedThumbs.value = data.thumbs;
+        preloadedRenders.value = data.renders;
         loadForm(data);
     } catch (e) {
         console.log('eee', e);
@@ -200,7 +275,6 @@ const projectAction = usePromiseState<ProjectResponse | void, ResponseError>(asy
 projectAction.execute();
 const saveError = computed<string>(() => {
     if (saveAction.error) return t('project_form_errors_default');
-
     return undefined;
 });
 

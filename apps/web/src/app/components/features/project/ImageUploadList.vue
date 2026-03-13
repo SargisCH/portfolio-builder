@@ -1,6 +1,6 @@
 <template>
     <q-file
-        v-model="images"
+        v-model="filePickerValue"
         :label="props.placeholder || 'Pick files'"
         outlined
         multiple
@@ -13,10 +13,9 @@
         ]"
     />
     <div class="col-12 row">
-        <p>{{ imagesRendered.length }}</p>
         <div
             v-for="(imageObject, index) in imagesRendered"
-            :key="imageObject.originalIndex || imageObject"
+            :key="imageObject.originalIndex ?? imageObject"
         >
             <div class="q-ml-md relative-position image-item">
                 <ImageActionsOverlay @delete="onDelete(index)" />
@@ -25,7 +24,6 @@
                     spinner-color="white"
                     style="height: 240px; width: 250px"
                 />
-                <span>{{ imageObject.id }}</span>
             </div>
             <div class="q-ml-md">
                 <q-btn
@@ -60,14 +58,16 @@
 
 <script setup lang="ts">
 import { parseImages } from '@/common';
-import { QFile } from 'quasar';
 import ImageActionsOverlay from '@/app/components/features/project/ImageActionsOverlay.vue';
 
 const props = defineProps(['placeholder', 'modelValue', 'preloadedImages']);
-const emit = defineEmits(['update:modelValue', 'delete:savedImage']);
+const emit = defineEmits(['update:modelValue']);
 
-const images = ref<File[]>(props.preloadedImages || []);
-const imagesRendered = ref(props.modelValue || []);
+// Separate ref for the q-file picker — always File[] only
+const filePickerValue = ref<File[]>([]);
+// Mixed array: existing images as URL strings, new uploads as File objects
+const images = ref<(File | string)[]>(props.preloadedImages || []);
+const imagesRendered = ref<any[]>(props.modelValue || []);
 const swapIndex = ref(-1);
 
 const swap = (index: number) => {
@@ -76,42 +76,97 @@ const swap = (index: number) => {
 const swapCancel = () => {
     swapIndex.value = -1;
 };
-const paste = (index: number) => {
-    const tempImage = images.value[index];
-    const renderedTemp = imagesRendered.value[index];
-    images.value[index] = images.value[swapIndex.value];
-    imagesRendered.value[index] = imagesRendered.value[swapIndex.value];
-    images.value[swapIndex.value] = tempImage;
-    imagesRendered.value[swapIndex.value] = renderedTemp;
-    swapIndex.value = -1;
-    emit('update:modelValue', images.value);
-};
-const onDelete = (index: number) => {
-    if (index > -1) {
-        const items = Array.from(images.value);
-        items.splice(index, 1);
-        images.value = items;
+let isSwapping = false;
+
+const paste = (toIndex: number) => {
+    const fromIndex = swapIndex.value;
+
+    if (fromIndex === toIndex) {
+        swapCancel();
+        return;
     }
-    imagesRendered.value = imagesRendered.value
-        .slice(0, index)
-        .concat(imagesRendered.value.slice(index + 1));
+
+    isSwapping = true;
+
+    const clonedImages = [...images.value];
+    const clonedRendered = [...imagesRendered.value];
+
+    const img1 = clonedImages[fromIndex];
+    const img2 = clonedImages[toIndex];
+    const rendered1 = clonedRendered[fromIndex];
+    const rendered2 = clonedRendered[toIndex];
+
+    clonedImages[fromIndex] = img2;
+    clonedImages[toIndex] = img1;
+    clonedRendered[fromIndex] = rendered2;
+    clonedRendered[toIndex] = rendered1;
+
+    images.value = clonedImages;
+    imagesRendered.value = clonedRendered;
+
+    swapCancel();
     emit('update:modelValue', images.value);
+
+    setTimeout(() => {
+        isSwapping = false;
+    }, 50);
 };
 
-watch(images, (newImages, prevImages) => {
-    if (newImages.length <= prevImages.length) return;
+const onDelete = (index: number) => {
+    isSwapping = true;
+
+    const items = [...images.value];
+    items.splice(index, 1);
+    images.value = items;
+    imagesRendered.value.splice(index, 1);
+
     emit('update:modelValue', images.value);
-    const imagesAdded = images.value.slice((newImages.length - prevImages.length) * -1);
-    parseImages(imagesAdded).then((imagesParsed: { originalIndex: number; image: string }[]) => {
-        imagesRendered.value = [...imagesRendered.value, ...imagesParsed];
+
+    setTimeout(() => {
+        isSwapping = false;
+    }, 50);
+};
+
+// When user picks files via q-file, push them into the mixed images array
+watch(filePickerValue, (newFiles) => {
+    if (!newFiles?.length) return;
+    images.value = [...images.value, ...newFiles];
+    filePickerValue.value = [];
+});
+
+watch(images, () => {
+    if (isSwapping) return;
+
+    emit('update:modelValue', images.value);
+
+    if (images.value.length <= imagesRendered.value.length) return;
+
+    const newItemsCount = images.value.length - imagesRendered.value.length;
+    const itemsAdded = images.value.slice(-newItemsCount);
+
+    // Only parse File objects — strings are already renderable URLs
+    const newFiles = itemsAdded.filter((item): item is File => item instanceof File);
+    if (newFiles.length === 0) return;
+
+    parseImages(newFiles).then((imagesParsed: { originalIndex: number; image: string }[]) => {
+        const startingIndex = imagesRendered.value.length;
+        const adjustedParsed = imagesParsed.map((img, i) => ({
+            ...img,
+            originalIndex: startingIndex + i,
+        }));
+        imagesRendered.value = [...imagesRendered.value, ...adjustedParsed];
     });
 });
+
 onMounted(() => {
     emit('update:modelValue', images.value);
-    parseImages(props.preloadedImages).then(
-        (imagesParsed: { originalIndex: number; image: string }[]) => {
-            imagesRendered.value = imagesParsed;
-        }
-    );
+
+    if (props.preloadedImages?.length) {
+        // Existing images are already URL strings — render them directly, no FileReader needed
+        imagesRendered.value = props.preloadedImages.map((url: string, index: number) => ({
+            originalIndex: index,
+            image: url,
+        }));
+    }
 });
 </script>
